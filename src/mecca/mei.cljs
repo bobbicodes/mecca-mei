@@ -44,6 +44,7 @@
    {:rows      30
     :cols      74
     :value     @file-atom
+    ;:on-change #(reset! file-atom (-> % .-target .-result))
     :read-only true}])
 
 (defn edn-out []
@@ -56,12 +57,55 @@
 
      :read-only true}]])
 
+(def children (mapcat :childs))
+
+(defn tagp [pred]
+  (comp children (filter (comp pred :name))))
+
+(defn tag= [tag]
+  (tagp (partial = tag)))
+
+(defn attr-accessor [a]
+  (comp a :attrib))
+
+(defn attrp [a pred]
+  (filter (comp pred (attr-accessor a))))
+
+(defn attr= [a v]
+  (attrp a (partial = v)))
+
+(defn render-children []
+  [:div
+   [:h2 "Children:"]
+   [:textarea
+    {:rows      30
+     :cols      74
+     :value     (str (sequence children [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]))
+
+     :read-only true}]])
+
+(comment
+  (sequence children [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
+  (sequence (tag= "measure") [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
+  
+  (->> [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]
+       (sequence (tag= "measure"))
+       count)
+  
+  (->> [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]
+       (sequence (comp (tag= :chapter)
+                       (attr= :name "Conclusion")))
+       count)
+  
+  )
+
 (defn mecca []
   [:div
    [:h1 "MECCA MEI"]
    [file-upload]
    [mei-out]
-   [edn-out]])
+   [edn-out]
+   [render-children]])
 
 (defn mount [el]
   (r/render-component [mecca] el))
