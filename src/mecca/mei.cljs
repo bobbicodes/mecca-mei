@@ -1,4 +1,4 @@
-(ns starter.browser
+(ns mecca.mei
   (:require [goog.dom :as gdom]
             [goog.object :as o]
             [reagent.core :as r]
@@ -25,7 +25,7 @@
 
 (defn file-upload []
   [:div
-   [:h2 "File upload"]
+   [:h2 "Import .mei score"]
    [:input#input
     {:type      "file"
      :on-change (fn [e]
@@ -47,12 +47,14 @@
     :read-only true}])
 
 (defn edn-out []
-  [:textarea
-   {:rows      30
-    :cols      74
-    :value     (str (js->clj (.parseString xml @file-atom) :keywordize-keys true))
+  [:div
+   [:h2 "Converted to EDN:"]
+   [:textarea
+    {:rows      30
+     :cols      74
+     :value     (str (js->clj (.parseString xml @file-atom) :keywordize-keys true))
 
-    :read-only true}])
+     :read-only true}]])
 
 (defn mecca []
   [:div
