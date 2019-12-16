@@ -1,24 +1,21 @@
-# shadow-cljs - browser quickstart
+# mecca-mei
 
-This is a minimum template you can use as the basis for CLJS projects intended to run in the browser.
+Clojurescript parser for MEI XML
 
-## Required Software
+[Try it live](https://porkostomus.github.io/mecca-mei/)
+
+## Local development
+
+## Required software
 
 - [node.js (v6.0.0+)](https://nodejs.org/en/download/)
 - [Java JDK (8+)](http://www.oracle.com/technetwork/java/javase/downloads/index.html) or [Open JDK (8+)](http://jdk.java.net/10/)
 
-## User Guide
-
-This repository only shows a basic example of how to get a basic Browser build.
-
-Please refer to the full [User Guide](https://shadow-cljs.github.io/docs/UsersGuide.html) for more information.
-
-
-## Running the Example
+## Running the app
 
 ```bash
-git clone https://github.com/shadow-cljs/quickstart-browser.git quickstart
-cd quickstart
+git clone https://github.com/porkostomus/mecca-mei.git
+cd mecca-mei
 npm install
 npx shadow-cljs server
 ```
