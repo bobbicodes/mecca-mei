@@ -25,7 +25,7 @@
 
 (defn file-upload []
   [:div
-   [:h2 "Import .mei score"]
+   [:h3 "Import .mei score"]
    [:input#input
     {:type      "file"
      :on-change (fn [e]
@@ -36,28 +36,28 @@
                     (set! (.-onload reader)
                           #(reset! file-atom (-> % .-target .-result)))))}]])
 
-(defn get-app-element []
-  (gdom/getElement "app"))
-
 (defn mei-out []
-  [:textarea
-   {:rows      30
-    :cols      74
-    :value     @file-atom
+  [:div
+   [:h3 "XML:"]
+   [:textarea
+    {:rows      15
+     :cols      50
+     :value     @file-atom
     ;:on-change #(reset! file-atom (-> % .-target .-result))
-    :read-only true}])
+     :read-only true}]])
 
 (defn edn-out []
   [:div
-   [:h2 "Converted to EDN:"]
+   [:h3 "EDN:"]
    [:textarea
-    {:rows      30
-     :cols      74
+    {:rows      15
+     :cols      50
      :value     (str (js->clj (.parseString xml @file-atom) :keywordize-keys true))
-
      :read-only true}]])
 
 (def children (mapcat :childs))
+
+(def tags (map :name))
 
 (defn tagp [pred]
   (comp children (filter (comp pred :name))))
@@ -74,14 +74,22 @@
 (defn attr= [a v]
   (attrp a (partial = v)))
 
+(defn render-tags []
+  [:div
+   [:h3 "Tags:"]
+   [:textarea
+    {:rows      5
+     :cols      50
+     :value     (str (sequence tags [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]))
+     :read-only true}]])
+
 (defn render-children []
   [:div
-   [:h2 "Children:"]
+   [:h3 "Children:"]
    [:textarea
-    {:rows      30
-     :cols      74
+    {:rows      15
+     :cols      50
      :value     (str (sequence children [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]))
-
      :read-only true}]])
 
 (comment
@@ -102,10 +110,16 @@
 (defn mecca []
   [:div
    [:h1 "MECCA MEI"]
+   [:p "Music data browser"]
    [file-upload]
+   [:p]
    [mei-out]
    [edn-out]
+   [render-tags]
    [render-children]])
+
+(defn get-app-element []
+  (gdom/getElement "app"))
 
 (defn mount [el]
   (r/render-component [mecca] el))
@@ -129,7 +143,3 @@
 ;; this is called before any code is reloaded
 (defn ^:dev/before-load stop []
   (js/console.log "stop"))
-
-(comment
-
-  )
