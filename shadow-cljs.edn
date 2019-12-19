@@ -12,8 +12,7 @@
 
         :modules
         {:main ;; <- becomes public/js/main.js
-         {:entries [mecca.mei]
-          :init-fn mecca.mei/init}}
+         {:entries [mecca.mei]}}
 
         ;; start a development http server on http://localhost:8020
         :devtools
