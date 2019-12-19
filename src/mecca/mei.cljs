@@ -77,12 +77,6 @@
                     (set! (.-onload reader)
                           #(reset! file-atom (-> % .-target .-result)))))}]])
 
-(comment
-  
-  @hiccup-atom
-  
-  )
-
 (defn hiccup-input []
   (let [text (r/atom [:note {:pname "c"
                              :oct   "4"
@@ -94,9 +88,9 @@
         {:rows      10
          :cols      30
          :value     (str @text)
-         :on-change #(do (when (s/valid? ::hiccup/element @hiccup-atom)
-                           (reset! file-atom (make-mei (-> % .-target .-value))))
-                         (reset! text (-> % .-target .-value)))}]])))
+         :on-change #(do (reset! text (-> % .-target .-value))
+                         (when (s/valid? ::hiccup/element @hiccup-atom)
+                           (reset! file-atom (make-mei (-> % .-target .-value)))))}]])))
 
 (defn mei-out []
   [:div
@@ -105,7 +99,6 @@
     {:rows      15
      :cols      50
      :value     @file-atom
-    ;:on-change #(reset! file-atom (-> % .-target .-result))
      :read-only true}]])
 
 (defn edn-out []
@@ -143,22 +136,9 @@
 
 (def root (r/atom "root"))
 
-(defn render-tags []
-  (let [doc (js->clj (.parseString xml @file-atom) :keywordize-keys true)]
-    [:div
-     [:h3 (str "[" @root "]")]
-     (for [tag (sequence tags [doc])]
-       ^{:key tag}
-       [button tag #(reset! root tag)])]))
-
 (comment
 @file-atom
 (make-mei @hiccup-atom)
-  
-  (let [parsed-mei (s/conform ::node mei)]
-    (if (= :s/invalid parsed-mei)
-      (s/explain-str ::node mei)
-      (stringify-mei parsed-mei))
 
   (sequence children [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
   (sequence (tag= "measure") [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
@@ -170,7 +150,7 @@
   (->> [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]
        (sequence (comp (tag= :chapter)
                        (attr= :name "Conclusion")))
-       count)))
+       count))
 
 (defn mecca []
   [:div
@@ -181,11 +161,7 @@
    [hiccup-input]
    [svg-out]
    [mei-out]
-   [edn-out]
-   ;[render-tags]
-   ;[render-children]
-   ])
-
+   [edn-out]])
 
 (defn get-app-element []
   (gdom/getElement "app"))
