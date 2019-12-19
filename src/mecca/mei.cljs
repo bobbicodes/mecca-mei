@@ -4,24 +4,38 @@
             [reagent.core :as r]
             ["node-xml-lite" :as xml]))
 
-(def file-atom (r/atom "<section>
-  <measure n=\"1\">
-    <staff n=\"1\">
-      <layer>
-        <chord dur=\"1\">
-          <note oct=\"5\" pname=\"c\"/>
-          <note oct=\"4\" pname=\"g\"/>
-          <note oct=\"4\" pname=\"e\"/>
-        </chord>
-      </layer>
-    </staff>
-    <staff n=\"2\">
-      <layer>
-        <note dur=\"1\" oct=\"3\" pname=\"c\"/>
-      </layer>
-    </staff>
-  </measure>
-</section>"))
+(def file-atom (r/atom "<mei xmlns=\"http://www.music-encoding.org/ns/mei\">
+    <meiHead>
+        <fileDesc>
+            <titleStmt>
+                <title/>
+            </titleStmt>
+            <pubStmt/>
+        </fileDesc>
+    </meiHead>
+    <music>
+        <body>
+            <mdiv>
+                <score>
+                    <scoreDef>
+                        <staffGrp>
+                            <staffDef clef.shape=\"G\" clef.line="2" n=\"1\" lines=\"5\"/>
+                        </staffGrp>
+                    </scoreDef>
+                    <section>
+                        <measure>
+                            <staff n=\"1\">
+                                <layer>
+                                    <note pname=\"c\" oct=\"4\" dur=\"4\"/>
+                                </layer>
+                            </staff>
+                        </measure>
+                    </section>
+                </score>
+            </mdiv>
+        </body>
+    </music>
+</mei>"))
 
 (defn svg-out []
   [:div.svg {:dangerouslySetInnerHTML {:__html (.renderData js/vrvToolkit @file-atom)}}])
