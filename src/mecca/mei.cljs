@@ -1,10 +1,13 @@
 (ns mecca.mei
-  (:require [goog.dom :as gdom]
+  (:require [clojure.spec.alpha :as s]
+            [goog.dom :as gdom]
             [goog.object :as o]
             [reagent.core :as r]
-            ["node-xml-lite" :as xml]))
+            ["node-xml-lite" :as xml]
+            [clojure.edn :as edn]
+            [mecca.hiccup :as hiccup]))
 
-(def file-atom (r/atom "<mei xmlns=\"http://www.music-encoding.org/ns/mei\">
+(def mei-header "<mei xmlns=\"http://www.music-encoding.org/ns/mei\">
     <meiHead>
         <fileDesc>
             <titleStmt>
@@ -25,9 +28,9 @@
                     <section>
                         <measure>
                             <staff n=\"1\">
-                                <layer>
-                                    <note pname=\"c\" oct=\"4\" dur=\"4\"/>
-                                </layer>
+                                <layer>")             
+                                                  
+(def mei-footer "</layer>
                             </staff>
                         </measure>
                     </section>
@@ -35,7 +38,28 @@
             </mdiv>
         </body>
     </music>
-</mei>"))
+</mei>")
+
+(defn make-mei [v]
+  (str mei-header
+       (hiccup/hiccup->mei (edn/read-string (str v)))
+       mei-footer))
+
+(defonce hiccup-atom
+  (r/atom
+   [:note {:pname "c"
+           :oct   "4"
+           :dur   "4"}]))
+
+(defonce file-atom (r/atom (make-mei @hiccup-atom)))
+
+(comment
+
+
+
+  )
+
+
 
 (defn svg-out []
   [:div.svg {:dangerouslySetInnerHTML {:__html (.renderData js/vrvToolkit @file-atom)}}])
@@ -52,6 +76,27 @@
                     (.readAsText reader file)
                     (set! (.-onload reader)
                           #(reset! file-atom (-> % .-target .-result)))))}]])
+
+(comment
+  
+  @hiccup-atom
+  
+  )
+
+(defn hiccup-input []
+  (let [text (r/atom [:note {:pname "c"
+                             :oct   "4"
+                             :dur   "4"}])]
+    (fn []
+      [:div
+       [:h3 "Enter MEI in hiccup:"]
+       [:textarea
+        {:rows      10
+         :cols      30
+         :value     (str @text)
+         :on-change #(do (when (s/valid? ::hiccup/element @hiccup-atom)
+                           (reset! file-atom (make-mei (-> % .-target .-value))))
+                         (reset! text (-> % .-target .-value)))}]])))
 
 (defn mei-out []
   [:div
@@ -106,20 +151,14 @@
        ^{:key tag}
        [button tag #(reset! root tag)])]))
 
-(defn render-children []
-  (let [doc (js->clj (.parseString xml @file-atom) :keywordize-keys true)]
-    [:div
-     [:textarea
-      {:rows      15
-       :cols      50
-       :value     (str (sequence (tag= @root) [doc]))
-       :read-only true}]]))
-
 (comment
-
-  (let [doc  (js->clj (.parseString xml @file-atom) :keywordize-keys true)
-        path [(tag= "section") children]]
-    (tag= "mei") [doc])
+@file-atom
+(make-mei @hiccup-atom)
+  
+  (let [parsed-mei (s/conform ::node mei)]
+    (if (= :s/invalid parsed-mei)
+      (s/explain-str ::node mei)
+      (stringify-mei parsed-mei))
 
   (sequence children [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
   (sequence (tag= "measure") [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
@@ -131,7 +170,7 @@
   (->> [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]
        (sequence (comp (tag= :chapter)
                        (attr= :name "Conclusion")))
-       count))
+       count)))
 
 (defn mecca []
   [:div
@@ -139,6 +178,7 @@
    [:p "Music data browser"]
    [file-upload]
    [:p]
+   [hiccup-input]
    [svg-out]
    [mei-out]
    [edn-out]
@@ -159,13 +199,13 @@
 
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
+  (mount-app-element)
   (js/console.log "start"))
 
 (defn ^:export init []
   ;; init is called ONCE when the page loads
   ;; this is called in the index.html and must be exported
   ;; so it is available even in :advanced release builds
-  (mount-app-element)
   (js/console.log "init")
   (start))
 
