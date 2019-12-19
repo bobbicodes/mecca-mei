@@ -19,7 +19,7 @@
                 <score>
                     <scoreDef>
                         <staffGrp>
-                            <staffDef clef.shape=\"G\" clef.line="2" n=\"1\" lines=\"5\"/>
+                            <staffDef clef.shape=\"G\" clef.line=\"2\" n=\"1\" lines=\"5\"/>
                         </staffGrp>
                     </scoreDef>
                     <section>
