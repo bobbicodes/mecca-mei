@@ -1,10 +1,11 @@
 (ns mecca.mei
-  (:require [goog.dom :as gdom]
-            [goog.object :as o]
-            [reagent.core :as r]
-            ["node-xml-lite" :as xml]))
+  (:require
+   [goog.dom :as gdom]
+   [goog.object :as o]
+   [reagent.core :as r]
+   ["node-xml-lite" :as xml]))
 
-(def file-atom (r/atom "<section>
+(defonce file-atom (r/atom "<section>
   <measure n=\"1\">
     <staff n=\"1\">
       <layer>
@@ -22,6 +23,10 @@
     </staff>
   </measure>
 </section>"))
+
+(defn svg-out []
+  [:div.svg {:dangerouslySetInnerHTML 
+                   {:__html (.renderData js/vrvToolkit @file-atom)}}])
 
 (defn file-upload []
   [:div
@@ -74,25 +79,36 @@
 (defn attr= [a v]
   (attrp a (partial = v)))
 
+(defn button [label onclick]
+  [:button
+   {:on-click onclick}
+   label])
+
+(def root (r/atom "root"))
+
 (defn render-tags []
-  [:div
-   [:h3 "Tags:"]
-   [:textarea
-    {:rows      5
-     :cols      50
-     :value     (str (sequence tags [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]))
-     :read-only true}]])
+  (let [doc (js->clj (.parseString xml @file-atom) :keywordize-keys true)]
+    [:div
+     [:h3 (str "[" @root "]")]
+     (for [tag (sequence tags [doc])]
+       ^{:key tag}
+       [button tag #(reset! root tag)])]))
 
 (defn render-children []
-  [:div
-   [:h3 "Children:"]
-   [:textarea
-    {:rows      15
-     :cols      50
-     :value     (str (sequence children [(js->clj (.parseString xml @file-atom) :keywordize-keys true)]))
-     :read-only true}]])
+  (let [doc (js->clj (.parseString xml @file-atom) :keywordize-keys true)]
+    [:div
+     [:textarea
+      {:rows      15
+       :cols      50
+       :value     (str (sequence (tag= @root) [doc]))
+       :read-only true}]]))
 
 (comment
+
+  (let [doc (js->clj (.parseString xml @file-atom) :keywordize-keys true)
+        path [(tag= "section") children]]
+    (tag= "mei") [doc])
+  
   (sequence children [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
   (sequence (tag= "measure") [(js->clj (.parseString xml @file-atom) :keywordize-keys true)])
   
@@ -113,10 +129,12 @@
    [:p "Music data browser"]
    [file-upload]
    [:p]
+   [svg-out]
    [mei-out]
    [edn-out]
-   [render-tags]
-   [render-children]])
+   ;[render-tags]
+   ;[render-children]
+   ])
 
 (defn get-app-element []
   (gdom/getElement "app"))
@@ -130,13 +148,13 @@
 
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
+  (mount-app-element)
   (js/console.log "start"))
 
 (defn ^:export init []
   ;; init is called ONCE when the page loads
   ;; this is called in the index.html and must be exported
   ;; so it is available even in :advanced release builds
-  (mount-app-element)
   (js/console.log "init")
   (start))
 
