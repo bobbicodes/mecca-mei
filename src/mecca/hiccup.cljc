@@ -38,7 +38,7 @@
 (defn- stringify-mei [mei-ast]
   (let [[type data] mei-ast]
     (case type
-      :text (str data)
+      :string (str data)
       :element (stringify-element data))))
 
 (defn hiccup->mei [mei]
